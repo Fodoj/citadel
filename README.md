@@ -79,9 +79,9 @@ composite IAM roles, possibly driven by Chef roles or other metadata.
 
 * `node['citadel']['access_key_id']`    = Access key if you are pulling
   data outside of EC2.
-* `node['citadel']['secret_access_key'] = Secret key
+* `node['citadel']['secret_access_key']` = Secret key
 
-* `node['citadel']['assume_role']       = In case you are using some
+* `node['citadel']['assume_role']`       = In case you are using some
   kind of cross-account setup, where S3 bucket is owned by one account and
 instance is located in another one, then you most likely will need to
 assume role in order to get access to the bucket. For more details see
