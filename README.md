@@ -33,6 +33,9 @@ $ touch /etc/chef/ohai/hints/ec2.json
 
 If you use knife-ec2 to start the instance, the hint file is already set for you.
 
+AWS SDK Gem should be installed as Chef gem. This can be done by adding
+`recipe['citadel']` to the run list.`
+
 ## IAM Policy
 
 By default, your role will not be able to access any files in your private S3
@@ -73,6 +76,16 @@ composite IAM roles, possibly driven by Chef roles or other metadata.
 ## Attributes
 
 * `node['citadel']['bucket']` – The default S3 bucket to use.
+
+* `node['citadel']['access_key_id']`    = Access key if you are pulling
+  data outside of EC2.
+* `node['citadel']['secret_access_key'] = Secret key
+
+* `node['citadel']['assume_role']       = In case you are using some
+  kind of cross-account setup, where S3 bucket is owned by one account and
+instance is located in another one, then you most likely will need to
+assume role in order to get access to the bucket. For more details see
+http://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html.
 
 ## Recipe Usage
 
