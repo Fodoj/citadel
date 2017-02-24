@@ -17,7 +17,7 @@
 
 require 'chef/http'
 require 'chef/json_compat'
-
+require 'aws-sdk-core'
 
 # Helper to access files in a private S3 bucket using an interface like Chef
 # node attributes.
@@ -30,7 +30,6 @@ require 'chef/json_compat'
 class Citadel
   autoload :ChefDSL, 'citadel/chef_dsl'
   autoload :CitadelError, 'citadel/error'
-  autoload :S3, 'citadel/s3'
   autoload :VERSION, 'citadel/version'
 
   attr_reader :bucket, :region, :credentials
@@ -44,37 +43,26 @@ class Citadel
 
   def find_credentials
     if @node['citadel']['access_key_id']
-      {
+      Aws::Credentials.new(
         access_key_id: @node['citadel']['access_key_id'],
         secret_access_key: @node['citadel']['secret_access_key'],
         token: @node['citadel']['token'],
-      }
-    elsif @node['ec2']
-      role_creds = if @node['ec2']['iam'] && @node['ec2']['iam']['security-credentials']
-        # Creds loaded from Ohai.
-        @node['ec2']['iam']['security-credentials'].values.first
-      else
-        begin
-          metadata_service = Chef::HTTP.new('http://169.254.169.254')
-          iam_role = metadata_service.get('latest/meta-data/iam/security-credentials/')
-          creds_json = metadata_service.get("latest/meta-data/iam/security-credentials/#{iam_role}")
-          Chef::JSONCompat.parse(creds_json)
-        rescue Net::HTTPServerException
-          raise CitadelError.new('Unable to find IAM credentials for node from EC2 metadata')
-        end
-      end
-      {
-        access_key_id: role_creds['AccessKeyId'],
-        secret_access_key: role_creds['SecretAccessKey'],
-        token: role_creds['Token'],
-      }
-    else
-      raise CitadelError.new('Unable to find S3 credentials')
+      )
+    elsif @node['citadel']['assume_role']
+      Aws::AssumeRoleCredentials.new(
+        role_arn: @node['citadel']['assume_role'],
+        role_session_name: "citadel-#{@node['name']}"
+      )
     end
   end
 
   def [](key)
     Chef::Log.debug("citadel: Retrieving #{@bucket}/#{key}")
-    Citadel::S3.get(bucket: @bucket, path: key, region: @region, **@credentials).to_s
+    client = if @credentials.nil?
+                Aws::S3::Client.new(region: @region)
+              else
+                Aws::S3::Client.new(credentials: @credentials, region: @region)
+              end
+    client.get_object(bucket: @bucket, key: key).body.string
   end
 end

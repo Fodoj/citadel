@@ -20,5 +20,6 @@ default['citadel']['bucket'] = nil
 default['citadel']['region'] = 'us-east-1'
 
 # Override these for use in Vagrant or other development environments
-default['citadel']['access_key_id'] = nil
+default['citadel']['access_key_id']     = nil
 default['citadel']['secret_access_key'] = nil
+default['citadel']['assume_role']       = nil
