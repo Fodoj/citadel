@@ -15,6 +15,7 @@ suites:
     iam_profile_name: citadel-role
 - name: attr
   run_list:
+  - recipe[citadel]
   - recipe[citadel_test]
   attributes:
     citadel:
